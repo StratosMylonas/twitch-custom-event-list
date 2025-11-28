@@ -1,0 +1,150 @@
+<html>
+<head>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .widget {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      color: #ffffff;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 6px;
+      padding: 6px 6px;
+      font-size: 14px;
+      display: inline-block;
+      box-shadow: 0 3px 15px rgba(0, 0, 0, 0.6);
+      animation: fadeIn 1s ease-out;
+      width: 250px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+      position: relative;
+    }
+
+    .label {
+      font-size: 10px;
+      opacity: 0.7;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .name {
+      font-size: 18px;
+      color: #ff69b4;
+      text-shadow: 0 0 5px #ff69b4, 0 0 10px #ff69b4, 0 0 15px #ff69b4;
+      opacity: 1;
+      transition: opacity 1s ease-in-out;
+      animation: glow 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes glow {
+      0% {
+        text-shadow: 0 0 5px #ff69b4, 0 0 10px #ff69b4, 0 0 15px #ff69b4;
+        color: #ff69b4;
+      }
+      100% {
+        text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4;
+        color: #ff69b4;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Follower Widget -->
+    <div id="followerWidget" class="widget">
+      <div class="label">Latest Follower</div>
+      <div id="latestFollower" class="name">Loading...</div>
+    </div>
+
+    <!-- Subscriber Widget -->
+    <div id="subscriberWidget" class="widget">
+      <div class="label">Latest Subscriber</div>
+      <div id="latestSubscriber" class="name">Loading...</div>
+    </div>
+
+    <!-- Cheer Widget -->
+    <div id="cheerWidget" class="widget">
+      <div class="label">Latest Cheer</div>
+      <div id="latestCheerer" class="name">Loading...</div>
+    </div>
+  </div>
+
+  <script>
+    function updateName(nameElementId, name) {
+      const nameElement = document.getElementById(nameElementId);
+      nameElement.innerText = name;
+      nameElement.style.opacity = 0;
+      setTimeout(() => {
+        nameElement.style.opacity = 1;
+      }, 300);
+    }
+
+    window.addEventListener('onWidgetLoad', function (obj) {
+    const latestFollower = obj.detail.session?.data['follower-latest'];
+    const latestSubscriber = obj.detail.session?.data['subscriber-latest'];
+    const latestCheer = obj.detail.session?.data['cheer-latest'];
+
+    if (latestFollower && latestFollower.name) {
+      updateName('latestFollower', latestFollower.name);
+    } else {
+      updateName('latestFollower', "No followers yet!");
+    }
+
+    if (latestSubscriber && latestSubscriber.name && latestSubscriber.amount) {
+      updateName('latestSubscriber', `${latestSubscriber.name}`);
+    } else if (latestSubscriber && latestSubscriber.name) {
+      updateName('latestSubscriber', latestSubscriber.name);
+    } else {
+      updateName('latestSubscriber', "No subscribers yet!");
+    }
+
+    if (latestCheer && latestCheer.name && latestCheer.amount) {
+      updateName('latestCheerer', `${latestCheer.name} (${latestCheer.amount})`);
+    } else {
+      updateName('latestCheerer', "No cheers yet!");
+    }
+  });
+
+  window.addEventListener('onEventReceived', function (obj) {
+    if (obj.detail.listener === "follower-latest") {
+      updateName('latestFollower', obj.detail.event.name);
+    }
+    if (obj.detail.listener === "subscriber-latest") {
+      const { name, amount } = obj.detail.event;
+      if (amount) {
+        updateName('latestSubscriber', `${name}`);
+      } else {
+        updateName('latestSubscriber', name);
+      }
+    }
+    if (obj.detail.listener === "cheer-latest") {
+      const { name, amount } = obj.detail.event;
+      updateName('latestCheerer', `${name} (${amount})`);
+    }
+  });
+
+  </script>
+</body>
+</html>
